@@ -23,7 +23,11 @@ static lzma_stream blank_stream = LZMA_STREAM_INIT;
 static const char *lzma_perror(lzma_ret err) {
   switch (err) {
     case LZMA_MEM_ERROR: return "Memory allocation failed";
+    case LZMA_MEMLIMIT_ERROR: return "Memory usage limit reached";
+    case LZMA_FORMAT_ERROR: return "File format not recognized";
     case LZMA_OPTIONS_ERROR: return "Compression options not supported";
+    case LZMA_DATA_ERROR: return "Data is corrupt";
+    case LZMA_BUF_ERROR: return "No progress is possible (internal error)";
     case LZMA_UNSUPPORTED_CHECK: return "Check type not supported";
     case LZMA_PROG_ERROR: return "Invalid arguments";
     default: return "?";
@@ -67,7 +71,12 @@ v8::Handle<v8::Value> Encoder::New(const v8::Arguments& args) {
   Encoder *obj = new Encoder();
   obj->Wrap(args.This());
 
-  lzma_ret ret = lzma_easy_encoder(&obj->_stream, 6 | LZMA_PRESET_EXTREME, LZMA_CHECK_CRC64);
+  lzma_ret ret;
+  if (args.Length() > 0 && args[0]->BooleanValue()) {
+    ret = lzma_stream_decoder(&obj->_stream, UINT64_MAX, 0);
+  } else {
+    ret = lzma_easy_encoder(&obj->_stream, 6 | LZMA_PRESET_EXTREME, LZMA_CHECK_NONE);
+  }
   if (ret != LZMA_OK) {
     delete obj;
     throwError(lzma_perror(ret));
