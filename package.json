@@ -29,7 +29,8 @@
     "coffee-script": "^1.7",
     "mocha": "*",
     "mocha-sprinkles": "*",
-    "plz": "^2.0.3"
+    "plz": "^2.0.3",
+    "should": "*"
   },
   "main": "./lib/xz.js"
 }
