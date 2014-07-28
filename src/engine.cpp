@@ -142,10 +142,10 @@ v8::Handle<v8::Value> Engine::Drain(const v8::Arguments& args) {
   if (ret != LZMA_OK && ret != LZMA_STREAM_END) throwError(lzma_perror(ret));
 
   int used = node::Buffer::Length(buffer) - obj->_stream.avail_out;
-  if (obj->_stream.avail_in == 0 || ret == LZMA_STREAM_END) {
-    return scope.Close(v8::Integer::New(used));
-  } else {
+  if (obj->_stream.avail_in > 0 || (action == LZMA_FINISH && ret != LZMA_STREAM_END)) {
     // try more.
     return scope.Close(v8::Integer::New(-used));
+  } else {
+    return scope.Close(v8::Integer::New(used));
   }
 }
