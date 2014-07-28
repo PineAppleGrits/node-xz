@@ -3,34 +3,33 @@ util = require "util"
 
 node_xz = require "../build/Release/node_xz"
 
-describe "Encoder", ->
+describe "Engine", ->
   it "can be closed exactly once", ->
-    encoder = new node_xz.Encoder()
-    encoder.close()
-    (-> encoder.close()).should.throw /closed/
+    engine = new node_xz.Engine()
+    engine.close()
+    (-> engine.close()).should.throw /closed/
 
   it "does what", ->
-    encoder = new node_xz.Encoder()
-    encoder.feed("hello, hello!")
+    writer = new node_xz.Engine()
+    writer.feed("hello, hello!")
 
     b1 = new Buffer(128)
-    n1 = encoder.drain(b1, false)
+    n1 = writer.drain(b1, false)
     console.log "got: #{util.inspect(b1)} len #{n1}"
 
     b2 = new Buffer(128)
-    n2 = encoder.drain(b2, true)
+    n2 = writer.drain(b2, true)
     console.log "got: #{util.inspect(b2)} len #{n2}"
 
-    encoder.close()
+    writer.close()
 
     zzz = Buffer.concat([ b1.slice(0, n1), b2.slice(0, n2) ])
     console.log "total: #{util.inspect(zzz)} len #{zzz.length}"
 
-    decoder = new node_xz.Encoder(true)
-    decoder.feed(zzz)
+    reader = new node_xz.Engine(true)
+    reader.feed(zzz)
 
     b3 = new Buffer(128)
-    n3 = decoder.drain(b3, false)
+    n3 = reader.drain(b3, false)
     console.log "got: #{util.inspect(b3)} len #{n3}"
     console.log b3.slice(0, n3).toString()
-    

@@ -4,7 +4,7 @@
 
 #include "lzma.h"
 
-#include "encoder.h"
+#include "engine.h"
 
 #define throwTypeError(str) do { \
   v8::ThrowException(v8::Exception::TypeError(v8::String::New(str))); \
@@ -16,7 +16,7 @@
   return scope.Close(v8::Undefined()); \
 } while (0)
 
-v8::Persistent<v8::Function> Encoder::constructor;
+v8::Persistent<v8::Function> Engine::constructor;
 
 static lzma_stream blank_stream = LZMA_STREAM_INIT;
 
@@ -35,30 +35,30 @@ static const char *lzma_perror(lzma_ret err) {
 }
 
 
-Encoder::Encoder(void) : _active(false) {
+Engine::Engine(void) : _active(false) {
   _stream = blank_stream;
 }
 
-Encoder::~Encoder() {
+Engine::~Engine() {
   if (_active) lzma_end(&_stream);
 }
 
-void Encoder::Init(v8::Handle<v8::Object> exports) {
+void Engine::Init(v8::Handle<v8::Object> exports) {
   // constructor template
   v8::Local<v8::FunctionTemplate> t = v8::FunctionTemplate::New(New);
-  t->SetClassName(v8::String::NewSymbol("Encoder"));
+  t->SetClassName(v8::String::NewSymbol("Engine"));
   t->InstanceTemplate()->SetInternalFieldCount(1);
 
   // methods
-  t->PrototypeTemplate()->Set(v8::String::NewSymbol("close"), v8::FunctionTemplate::New(Encoder::Close)->GetFunction());
-  t->PrototypeTemplate()->Set(v8::String::NewSymbol("feed"), v8::FunctionTemplate::New(Encoder::Feed)->GetFunction());
-  t->PrototypeTemplate()->Set(v8::String::NewSymbol("drain"), v8::FunctionTemplate::New(Encoder::Drain)->GetFunction());
+  t->PrototypeTemplate()->Set(v8::String::NewSymbol("close"), v8::FunctionTemplate::New(Engine::Close)->GetFunction());
+  t->PrototypeTemplate()->Set(v8::String::NewSymbol("feed"), v8::FunctionTemplate::New(Engine::Feed)->GetFunction());
+  t->PrototypeTemplate()->Set(v8::String::NewSymbol("drain"), v8::FunctionTemplate::New(Engine::Drain)->GetFunction());
   constructor = v8::Persistent<v8::Function>::New(t->GetFunction());
 
-  exports->Set(v8::String::NewSymbol("Encoder"), constructor);
+  exports->Set(v8::String::NewSymbol("Engine"), constructor);
 }
 
-v8::Handle<v8::Value> Encoder::New(const v8::Arguments& args) {
+v8::Handle<v8::Value> Engine::New(const v8::Arguments& args) {
   v8::HandleScope scope;
 
   if (!args.IsConstructCall()) {
@@ -68,7 +68,7 @@ v8::Handle<v8::Value> Encoder::New(const v8::Arguments& args) {
     return scope.Close(constructor->NewInstance(argc, argv));
   }
 
-  Encoder *obj = new Encoder();
+  Engine *obj = new Engine();
   obj->Wrap(args.This());
 
   lzma_ret ret;
@@ -86,11 +86,11 @@ v8::Handle<v8::Value> Encoder::New(const v8::Arguments& args) {
   return args.This();
 }
 
-v8::Handle<v8::Value> Encoder::Close(const v8::Arguments& args) {
+v8::Handle<v8::Value> Engine::Close(const v8::Arguments& args) {
   v8::HandleScope scope;
 
-  Encoder *obj = ObjectWrap::Unwrap<Encoder>(args.This());
-  if (!obj->_active) throwError("Encoder has already been closed");
+  Engine *obj = ObjectWrap::Unwrap<Engine>(args.This());
+  if (!obj->_active) throwError("Engine has already been closed");
 
   lzma_end(&obj->_stream);
   obj->_active = false;
@@ -99,11 +99,11 @@ v8::Handle<v8::Value> Encoder::Close(const v8::Arguments& args) {
 
 // prep next "Drain" by setting up the input buffer.
 // you may not let the buffer leave scope before draining!
-v8::Handle<v8::Value> Encoder::Feed(const v8::Arguments& args) {
+v8::Handle<v8::Value> Engine::Feed(const v8::Arguments& args) {
   v8::HandleScope scope;
 
-  Encoder *obj = ObjectWrap::Unwrap<Encoder>(args.This());
-  if (!obj->_active) throwError("Encoder has already been closed");
+  Engine *obj = ObjectWrap::Unwrap<Engine>(args.This());
+  if (!obj->_active) throwError("Engine has already been closed");
 
   if (args.Length() != 1) throwTypeError("Requires 1 argument: <buffer>");
 
@@ -124,11 +124,11 @@ v8::Handle<v8::Value> Encoder::Feed(const v8::Arguments& args) {
 // run the encoder, filling as much of the buffer as possible, returning the amount used.
 // negative value means you need to run it again.
 // if "finished" is true, tell the encoder there will be no more data, and to wrap it up.
-v8::Handle<v8::Value> Encoder::Drain(const v8::Arguments& args) {
+v8::Handle<v8::Value> Engine::Drain(const v8::Arguments& args) {
   v8::HandleScope scope;
 
-  Encoder *obj = ObjectWrap::Unwrap<Encoder>(args.This());
-  if (!obj->_active) throwError("Encoder has already been closed");
+  Engine *obj = ObjectWrap::Unwrap<Engine>(args.This());
+  if (!obj->_active) throwError("Engine has already been closed");
   if (args.Length() < 1 || args.Length() > 2) throwTypeError("Requires 1 or 2 arguments: <buffer> [<bool>]");
 
   v8::Local<v8::Object> buffer = args[0]->ToObject();

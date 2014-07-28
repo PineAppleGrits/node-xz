@@ -8,8 +8,8 @@
       ],
       "sources": [
         "src/node_xz.cpp",
-        "src/encoder.h",
-        "src/encoder.cpp"
+        "src/engine.h",
+        "src/engine.cpp"
       ],
       "libraries": [
         "<(SHARED_INTERMEDIATE_DIR)/xz-<@(xz_version)/src/liblzma/.libs/liblzma.a"

@@ -3,10 +3,10 @@
 
 #include "lzma.h"
 
-#include "encoder.h"
+#include "engine.h"
 
 void init(v8::Handle<v8::Object> exports) {
-  Encoder::Init(exports);
+  Engine::Init(exports);
 }
 
 NODE_MODULE(node_xz, init);

@@ -5,13 +5,17 @@
 
 #include "lzma.h"
 
-class Encoder : public node::ObjectWrap {
+/**
+ * This low-level wrapper is unpleasant, and isn't meant to be used directly.
+ * It just provides access to the raw stream engine in xz.
+ */
+class Engine : public node::ObjectWrap {
 public:
   static void Init(v8::Handle<v8::Object> exports);
 
 private:
-  explicit Encoder(void);
-  ~Encoder();
+  explicit Engine(void);
+  ~Engine();
 
   static v8::Handle<v8::Value> New(const v8::Arguments& args);
   static v8::Handle<v8::Value> Close(const v8::Arguments& args);
