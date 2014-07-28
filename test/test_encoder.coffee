@@ -11,7 +11,7 @@ describe "Encoder", ->
 
   it "does what", ->
     encoder = new node_xz.Encoder()
-    encoder.feed("hello")
+    encoder.feed("hello, hello!")
 
     b1 = new Buffer(128)
     n1 = encoder.drain(b1, false)
@@ -23,7 +23,7 @@ describe "Encoder", ->
 
     encoder.close()
 
-    zzz = Buffer.concat([ b1, b2 ])
+    zzz = Buffer.concat([ b1.slice(0, n1), b2.slice(0, n2) ])
     console.log "total: #{util.inspect(zzz)} len #{zzz.length}"
 
     decoder = new node_xz.Encoder(true)
@@ -31,4 +31,6 @@ describe "Encoder", ->
 
     b3 = new Buffer(128)
     n3 = decoder.drain(b3, false)
-    console.log "got: #{b3} len #{n3}"
+    console.log "got: #{util.inspect(b3)} len #{n3}"
+    console.log b3.slice(0, n3).toString()
+    
