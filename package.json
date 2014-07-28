@@ -1,0 +1,35 @@
+{
+  "name": "xz",
+  "version": "1.0.0",
+  "description": "node bindings for the xz compression library",
+  "keywords": [
+    "compression", "xz"
+  ],
+  "author": "Robey Pointer <robeypointer@gmail.com>",
+  "homepage": "https://github.com/robey/node-xz",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/robey/node-xz.git"
+  },
+  "licenses": [
+    {
+      "type": "Apache License 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+    }
+  ],
+  "scripts": {
+    "build": "./node_modules/.bin/plz build",
+    "install": "node-gyp install",
+    "test": "./node_modules/.bin/plz test -v --color"
+  },
+  "dependencies": {
+    "q": "^1.0.1"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.7",
+    "mocha": "*",
+    "mocha-sprinkles": "*",
+    "plz": "^2.0.3"
+  },
+  "main": "./lib/xz.js"
+}
