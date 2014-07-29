@@ -62,6 +62,7 @@ void Engine::Init(v8::Handle<v8::Object> exports) {
   exports->Set(v8::String::NewSymbol("Engine"), constructor);
   exports->Set(v8::String::NewSymbol("MODE_ENCODE"), v8::Integer::New(MODE_ENCODE));
   exports->Set(v8::String::NewSymbol("MODE_DECODE"), v8::Integer::New(MODE_DECODE));
+  exports->Set(v8::String::NewSymbol("ENCODE_FINISH"), v8::Integer::New(ENCODE_FINISH));
 }
 
 // new Engine(MODE_DECODE or MODE_ENCODE, [ preset ]);
@@ -140,12 +141,14 @@ v8::Handle<v8::Value> Engine::Drain(const v8::Arguments& args) {
 
   Engine *obj = ObjectWrap::Unwrap<Engine>(args.This());
   if (!obj->_active) throwError("Engine has already been closed");
-  if (args.Length() < 1 || args.Length() > 2) throwTypeError("Requires 1 or 2 arguments: <buffer> [<bool>]");
+  if (args.Length() < 1 || args.Length() > 2) throwTypeError("Requires 1 or 2 arguments: <buffer> [<flags>]");
 
   v8::Local<v8::Object> buffer = args[0]->ToObject();
   if (!node::Buffer::HasInstance(buffer)) throwTypeError("Argument must be a buffer");
 
-  lzma_action action = (args.Length() > 1 && args[1]->BooleanValue()) ? LZMA_FINISH : LZMA_RUN;
+  int flags = (args.Length() > 1) ? args[1]->IntegerValue() : 0;
+
+  lzma_action action = (flags & ENCODE_FINISH) ? LZMA_FINISH : LZMA_RUN;
 
   obj->_stream.next_out = (uint8_t *) node::Buffer::Data(buffer);
   obj->_stream.avail_out = node::Buffer::Length(buffer);

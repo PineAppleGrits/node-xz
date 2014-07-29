@@ -11,20 +11,20 @@ class XzStream extends stream.Transform
 
   _transform: (chunk, encoding, callback) ->
     @engine.feed(chunk)
-    @__drain(chunk.length, false)
+    @__drain(chunk.length)
     callback(null)
 
   _flush: (callback) ->
-    @__drain(0, true)
+    @__drain(0, node_xz.ENCODE_FINISH)
     callback(null)
 
-  __drain: (estimate, finished=false) ->
+  __drain: (estimate, flags) ->
     bufSize = Math.max(estimate, DEFAULT_BUFSIZE)
     segments = []
     n = -1
     while n < 0
       buffer = new Buffer(bufSize)
-      n = @engine.drain(buffer, finished)
+      n = @engine.drain(buffer, flags)
       segments.push buffer.slice(0, Math.abs(n))
     @push Buffer.concat(segments)
 
