@@ -4,11 +4,6 @@ util = require "util"
 
 xz = require "../lib/xz"
 
-hexLogger = new stream.Writable()
-hexLogger._write = (chunk, encoding, callback) ->
-  console.log "==> " + util.inspect(chunk)
-  callback(null)
-
 bufferSource = (b) ->
   if typeof b == "string" then b = new Buffer(b)
   s = new stream.Readable()
@@ -25,6 +20,7 @@ bufferSink = ->
     callback(null)
   s.getBuffer = -> Buffer.concat(s.buffers)
   s
+
 
 describe "Compressor/Decompressor", ->
   it "can compress", (done) ->
