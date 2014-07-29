@@ -2,7 +2,7 @@ node_xz = require "../build/Release/node_xz.node"
 stream = require "stream"
 util = require "util"
 
-DEFAULT_BUFSIZE = 16384
+DEFAULT_BUFSIZE = 128 * 1024
 
 class XzStream extends stream.Transform
   constructor: (mode, preset, options) ->
@@ -15,11 +15,11 @@ class XzStream extends stream.Transform
     callback(null)
 
   _flush: (callback) ->
-    @__drain(0, node_xz.ENCODE_FINISH)
+    @__drain(DEFAULT_BUFSIZE, node_xz.ENCODE_FINISH)
     callback(null)
 
   __drain: (estimate, flags) ->
-    bufSize = Math.max(estimate, DEFAULT_BUFSIZE)
+    bufSize = Math.min(estimate * 1.1, DEFAULT_BUFSIZE)
     segments = []
     n = -1
     while n < 0

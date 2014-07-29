@@ -1,3 +1,4 @@
+fs = require "fs"
 should = require "should"
 stream = require "stream"
 util = require "util"
@@ -39,4 +40,12 @@ describe "Compressor/Decompressor", ->
     bufferSource(data).pipe(c).pipe(d).pipe(out)
     out.on "finish", ->
       out.getBuffer().toString().should.eql data
+      done()
+
+  it "can compress a big file", (done) ->
+    c = new xz.Compressor(9)
+    out = bufferSink()
+    fs.createReadStream("./testdata/minecraft.png").pipe(c).pipe(out)
+    out.on "finish", ->
+      out.getBuffer().length.should.lessThan(fs.statSync("./testdata/minecraft.png").size)
       done()
