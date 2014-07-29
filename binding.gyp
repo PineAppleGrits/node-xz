@@ -7,9 +7,9 @@
         "deps/xz.gyp:xz"
       ],
       "sources": [
-        "src/node_xz.cpp",
-        "src/engine.h",
-        "src/engine.cpp"
+        "src/c++/node_xz.cpp",
+        "src/c++/engine.h",
+        "src/c++/engine.cpp"
       ],
       "libraries": [
         "<(SHARED_INTERMEDIATE_DIR)/xz-<@(xz_version)/src/liblzma/.libs/liblzma.a"
