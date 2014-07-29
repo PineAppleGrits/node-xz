@@ -16,6 +16,10 @@
   return scope.Close(v8::Undefined()); \
 } while (0)
 
+#define MODE_ENCODE 0
+#define MODE_DECODE 1
+#define ENCODE_FINISH 1
+
 v8::Persistent<v8::Function> Engine::constructor;
 
 static lzma_stream blank_stream = LZMA_STREAM_INIT;
@@ -56,8 +60,12 @@ void Engine::Init(v8::Handle<v8::Object> exports) {
   constructor = v8::Persistent<v8::Function>::New(t->GetFunction());
 
   exports->Set(v8::String::NewSymbol("Engine"), constructor);
+  exports->Set(v8::String::NewSymbol("MODE_ENCODE"), v8::Integer::New(MODE_ENCODE));
+  exports->Set(v8::String::NewSymbol("MODE_DECODE"), v8::Integer::New(MODE_DECODE));
 }
 
+// new Engine(MODE_DECODE or MODE_ENCODE, [ preset ]);
+// "preset" is the compression level (0 - 9)
 v8::Handle<v8::Value> Engine::New(const v8::Arguments& args) {
   v8::HandleScope scope;
 
@@ -68,14 +76,17 @@ v8::Handle<v8::Value> Engine::New(const v8::Arguments& args) {
     return scope.Close(constructor->NewInstance(argc, argv));
   }
 
+  int mode = (args.Length() > 0) ? args[0]->IntegerValue() : 0;
+  int preset = (args.Length() > 1) ? args[1]->IntegerValue() : 6;
+
   Engine *obj = new Engine();
   obj->Wrap(args.This());
 
   lzma_ret ret;
-  if (args.Length() > 0 && args[0]->BooleanValue()) {
+  if (mode == MODE_DECODE) {
     ret = lzma_stream_decoder(&obj->_stream, UINT64_MAX, 0);
   } else {
-    ret = lzma_easy_encoder(&obj->_stream, 6 | LZMA_PRESET_EXTREME, LZMA_CHECK_NONE);
+    ret = lzma_easy_encoder(&obj->_stream, preset, LZMA_CHECK_NONE);
   }
   if (ret != LZMA_OK) {
     delete obj;

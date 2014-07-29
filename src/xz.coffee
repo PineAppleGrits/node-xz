@@ -5,9 +5,9 @@ util = require "util"
 DEFAULT_BUFSIZE = 16384
 
 class XzStream extends stream.Transform
-  constructor: (isDecompressing, options) ->
+  constructor: (mode, preset, options) ->
     super(options)
-    @engine = new node_xz.Engine(isDecompressing)
+    @engine = new node_xz.Engine(mode, preset)
 
   _transform: (chunk, encoding, callback) ->
     @engine.feed(chunk)
@@ -30,12 +30,12 @@ class XzStream extends stream.Transform
 
 
 class Compressor extends XzStream
-  constructor: (options) ->
-    super(false, options)
+  constructor: (preset, options) ->
+    super(node_xz.MODE_ENCODE, preset, options)
 
 class Decompressor extends XzStream
   constructor: (options) ->
-    super(true, options)
+    super(node_xz.MODE_DECODE, null, options)
 
 
 exports.Compressor = Compressor
