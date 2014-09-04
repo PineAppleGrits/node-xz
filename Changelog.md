@@ -1,3 +1,8 @@
+## 1.0.3  (4 sep 2014)
+
+- fixed "package.json" again
+
+
 ## 1.0.2  (4 sep 2014)
 
 - fixed "package.json" to make a usable package (previous versions wouldn't even install correctly)
