@@ -49,10 +49,3 @@ Authors
 -------
 
 - @robey - Robey Pointer <robeypointer@gmail.com>
-
-
-Changelog
----------
-
-1.0.1
-- remove unused dependencies
