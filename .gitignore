@@ -1,3 +1,6 @@
+.plz/
 build/
 lib/
 node_modules/
+*.sublime-project
+*.sublime-workspace
