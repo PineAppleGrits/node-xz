@@ -23,7 +23,7 @@ The API consists of only two stream transform classes: `Compressor` and `Decompr
 - `new xz.Compressor([preset], [options])`
 - `new xz.Decompressor([options])`
 
-The options object passed to node's `Transform`. Compression takes a "preset" number, which is an abstraction of the compression difficulty level, from 1 to 9, where 1 puts in the least effort. The default is 6.
+The options object is passed to node's `Transform`. Compression takes a "preset" number, which is an abstraction of the compression difficulty level, from 1 to 9, where 1 puts in the least effort. The default is 6.
 
 Both objects are stream transforms that consume and produce Buffers. Here's example code to compress the sample file included with this distribution:
 
