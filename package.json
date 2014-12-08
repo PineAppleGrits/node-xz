@@ -1,6 +1,6 @@
 {
   "name": "xz",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "node bindings for the xz compression library",
   "keywords": [
     "compression", "xz"

@@ -1,3 +1,9 @@
+## 1.0.4  (7 dec 2014)
+
+- fixed xz build on Linux by doing hand-to-hand combat with gyp
+- removed low-level support for compressing strings, since it leaks memory (use buffers)
+
+
 ## 1.0.3  (4 sep 2014)
 
 - fixed "package.json" again
