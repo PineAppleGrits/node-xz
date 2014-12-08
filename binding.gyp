@@ -11,6 +11,12 @@
         "src/c++/engine.h",
         "src/c++/engine.cpp"
       ],
+      "compile_flags": [
+        "-fPIC"
+      ],
+      "include_dirs": [
+        "<(SHARED_INTERMEDIATE_DIR)/xz-<@(xz_version)/src/liblzma/api"
+      ],
       "libraries": [
         "<(SHARED_INTERMEDIATE_DIR)/xz-<@(xz_version)/src/liblzma/.libs/liblzma.a"
       ]
