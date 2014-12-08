@@ -119,16 +119,10 @@ v8::Handle<v8::Value> Engine::Feed(const v8::Arguments& args) {
 
   if (args.Length() != 1) throwTypeError("Requires 1 argument: <buffer>");
 
-  if (args[0]->IsString()) {
-    v8::String::Utf8Value s(args[0]->ToString());
-    obj->_stream.next_in = (const uint8_t *) *s;
-    obj->_stream.avail_in = s.length();
-  } else {
-    v8::Local<v8::Object> buffer = args[0]->ToObject();
-    if (!node::Buffer::HasInstance(buffer)) throwTypeError("Argument must be a buffer");
-    obj->_stream.next_in = (const uint8_t *) node::Buffer::Data(buffer);
-    obj->_stream.avail_in = node::Buffer::Length(buffer);
-  }
+  v8::Handle<v8::Object> buffer = args[0]->ToObject();
+  if (!node::Buffer::HasInstance(buffer)) throwTypeError("Argument must be a buffer");
+  obj->_stream.next_in = (const uint8_t *) node::Buffer::Data(buffer);
+  obj->_stream.avail_in = node::Buffer::Length(buffer);
 
   return scope.Close(v8::Integer::New(obj->_stream.avail_in));
 }
@@ -143,7 +137,7 @@ v8::Handle<v8::Value> Engine::Drain(const v8::Arguments& args) {
   if (!obj->_active) throwError("Engine has already been closed");
   if (args.Length() < 1 || args.Length() > 2) throwTypeError("Requires 1 or 2 arguments: <buffer> [<flags>]");
 
-  v8::Local<v8::Object> buffer = args[0]->ToObject();
+  v8::Handle<v8::Object> buffer = args[0]->ToObject();
   if (!node::Buffer::HasInstance(buffer)) throwTypeError("Argument must be a buffer");
 
   int flags = (args.Length() > 1) ? args[1]->IntegerValue() : 0;

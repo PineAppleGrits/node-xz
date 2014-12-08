@@ -11,7 +11,7 @@ describe "Engine", ->
 
   it "encodes in steps", ->
     writer = new node_xz.Engine(node_xz.MODE_ENCODE, 6)
-    writer.feed("hello, hello!")
+    writer.feed(new Buffer("hello, hello!"))
     b1 = new Buffer(128)
     n1 = writer.drain(b1)
     n1.should.eql 24
@@ -21,14 +21,14 @@ describe "Engine", ->
 
   it "encodes all at once", ->
     writer = new node_xz.Engine(node_xz.MODE_ENCODE, 6)
-    writer.feed("hello, hello!")
+    writer.feed(new Buffer("hello, hello!"))
     b1 = new Buffer(128)
     n1 = writer.drain(b1, node_xz.ENCODE_FINISH)
     n1.should.eql 64
 
   it "copes with insufficient space", ->
     writer = new node_xz.Engine(node_xz.MODE_ENCODE, 6)
-    writer.feed("hello, hello!")
+    writer.feed(new Buffer("hello, hello!"))
     b1 = new Buffer(32)
     n1 = writer.drain(b1, node_xz.ENCODE_FINISH)
     n1.should.eql -32
@@ -37,7 +37,7 @@ describe "Engine", ->
     n2.should.eql 32
 
     fullWriter = new node_xz.Engine(node_xz.MODE_ENCODE, 6)
-    fullWriter.feed("hello, hello!")
+    fullWriter.feed(new Buffer("hello, hello!"))
     bf = new Buffer(64)
     nf = fullWriter.drain(bf, node_xz.ENCODE_FINISH)
     nf.should.eql 64
@@ -45,7 +45,7 @@ describe "Engine", ->
 
   it "can decode what it encodes", ->
     writer = new node_xz.Engine(node_xz.MODE_ENCODE, 6)
-    writer.feed("hello, hello!")
+    writer.feed(new Buffer("hello, hello!"))
     b1 = new Buffer(128)
     n1 = writer.drain(b1, node_xz.ENCODE_FINISH)
     writer.close()
