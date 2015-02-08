@@ -1,3 +1,8 @@
+## 1.1.0  (8 feb 2015)
+
+- switched to using NaN for the v8 bindings, which should fix it to work with io.js
+
+
 ## 1.0.4  (7 dec 2014)
 
 - fixed xz build on Linux by doing hand-to-hand combat with gyp
