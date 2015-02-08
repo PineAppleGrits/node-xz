@@ -1,26 +1,16 @@
 #include <node.h>
 #include <node_buffer.h>
-#include <v8.h>
+#include <nan.h>
 
 #include "lzma.h"
 
 #include "engine.h"
 
-#define throwTypeError(str) do { \
-  v8::ThrowException(v8::Exception::TypeError(v8::String::New(str))); \
-  return scope.Close(v8::Undefined()); \
-} while (0)
-
-#define throwError(str) do { \
-  v8::ThrowException(v8::Exception::Error(v8::String::New(str))); \
-  return scope.Close(v8::Undefined()); \
-} while (0)
-
 #define MODE_ENCODE 0
 #define MODE_DECODE 1
 #define ENCODE_FINISH 1
 
-v8::Persistent<v8::Function> Engine::constructor;
+v8::Persistent<v8::FunctionTemplate> Engine::constructor;
 
 static lzma_stream blank_stream = LZMA_STREAM_INIT;
 
@@ -48,33 +38,33 @@ Engine::~Engine() {
 }
 
 void Engine::Init(v8::Handle<v8::Object> exports) {
+  NanScope();
+
   // constructor template
-  v8::Local<v8::FunctionTemplate> t = v8::FunctionTemplate::New(New);
-  t->SetClassName(v8::String::NewSymbol("Engine"));
-  t->InstanceTemplate()->SetInternalFieldCount(1);
+  v8::Local<v8::FunctionTemplate> ctor = NanNew<v8::FunctionTemplate>(Engine::New);
+  NanAssignPersistent(constructor, ctor);
+  ctor->SetClassName(NanNew<v8::String>("Engine"));
+  ctor->InstanceTemplate()->SetInternalFieldCount(1);
 
-  // methods
-  t->PrototypeTemplate()->Set(v8::String::NewSymbol("close"), v8::FunctionTemplate::New(Engine::Close)->GetFunction());
-  t->PrototypeTemplate()->Set(v8::String::NewSymbol("feed"), v8::FunctionTemplate::New(Engine::Feed)->GetFunction());
-  t->PrototypeTemplate()->Set(v8::String::NewSymbol("drain"), v8::FunctionTemplate::New(Engine::Drain)->GetFunction());
-  constructor = v8::Persistent<v8::Function>::New(t->GetFunction());
+  // prototype methods
+  // v8::Local<v8::ObjectTemplate> proto = ctor->PrototypeTemplate();
+  NODE_SET_PROTOTYPE_METHOD(ctor, "close", Engine::Close);
+  NODE_SET_PROTOTYPE_METHOD(ctor, "feed", Engine::Feed);
+  NODE_SET_PROTOTYPE_METHOD(ctor, "drain", Engine::Drain);
 
-  exports->Set(v8::String::NewSymbol("Engine"), constructor);
-  exports->Set(v8::String::NewSymbol("MODE_ENCODE"), v8::Integer::New(MODE_ENCODE));
-  exports->Set(v8::String::NewSymbol("MODE_DECODE"), v8::Integer::New(MODE_DECODE));
-  exports->Set(v8::String::NewSymbol("ENCODE_FINISH"), v8::Integer::New(ENCODE_FINISH));
+  exports->Set(NanNew<v8::String>("Engine"), ctor->GetFunction());
+  exports->Set(NanNew<v8::String>("MODE_ENCODE"), NanNew<v8::Integer>(MODE_ENCODE));
+  exports->Set(NanNew<v8::String>("MODE_DECODE"), NanNew<v8::Integer>(MODE_DECODE));
+  exports->Set(NanNew<v8::String>("ENCODE_FINISH"), NanNew<v8::Integer>(ENCODE_FINISH));
 }
 
 // new Engine(MODE_DECODE or MODE_ENCODE, [ preset ]);
 // "preset" is the compression level (0 - 9)
-v8::Handle<v8::Value> Engine::New(const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Engine::New) {
+  NanScope();
 
   if (!args.IsConstructCall()) {
-    // Invoked as plain function, turn into construct call.
-    const int argc = 1;
-    v8::Local<v8::Value> argv[argc] = { args[0] };
-    return scope.Close(constructor->NewInstance(argc, argv));
+    NanThrowError("Must be called as constructor");
   }
 
   int mode = (args.Length() > 0) ? args[0]->IntegerValue() : 0;
@@ -91,54 +81,54 @@ v8::Handle<v8::Value> Engine::New(const v8::Arguments& args) {
   }
   if (ret != LZMA_OK) {
     delete obj;
-    throwError(lzma_perror(ret));
+    NanThrowError(lzma_perror(ret));
   }
 
   obj->_active = true;
-  return args.This();
+  NanReturnThis();
 }
 
-v8::Handle<v8::Value> Engine::Close(const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Engine::Close) {
+  NanScope();
 
   Engine *obj = ObjectWrap::Unwrap<Engine>(args.This());
-  if (!obj->_active) throwError("Engine has already been closed");
+  if (!obj->_active) NanThrowError("Engine has already been closed");
 
   lzma_end(&obj->_stream);
   obj->_active = false;
-  return scope.Close(v8::Undefined());
+  NanReturnUndefined();
 }
 
 // prep next "Drain" by setting up the input buffer.
 // you may not let the buffer leave scope before draining!
-v8::Handle<v8::Value> Engine::Feed(const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Engine::Feed) {
+  NanScope();
 
   Engine *obj = ObjectWrap::Unwrap<Engine>(args.This());
-  if (!obj->_active) throwError("Engine has already been closed");
+  if (!obj->_active) NanThrowError("Engine has already been closed");
 
-  if (args.Length() != 1) throwTypeError("Requires 1 argument: <buffer>");
+  if (args.Length() != 1) NanThrowTypeError("Requires 1 argument: <buffer>");
 
   v8::Handle<v8::Object> buffer = args[0]->ToObject();
-  if (!node::Buffer::HasInstance(buffer)) throwTypeError("Argument must be a buffer");
+  if (!node::Buffer::HasInstance(buffer)) NanThrowTypeError("Argument must be a buffer");
   obj->_stream.next_in = (const uint8_t *) node::Buffer::Data(buffer);
   obj->_stream.avail_in = node::Buffer::Length(buffer);
 
-  return scope.Close(v8::Integer::New(obj->_stream.avail_in));
+  NanReturnValue(NanNew<v8::Integer>((int) obj->_stream.avail_in));
 }
 
 // run the encoder, filling as much of the buffer as possible, returning the amount used.
 // negative value means you need to run it again.
 // if "finished" is true, tell the encoder there will be no more data, and to wrap it up.
-v8::Handle<v8::Value> Engine::Drain(const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Engine::Drain) {
+  NanScope();
 
   Engine *obj = ObjectWrap::Unwrap<Engine>(args.This());
-  if (!obj->_active) throwError("Engine has already been closed");
-  if (args.Length() < 1 || args.Length() > 2) throwTypeError("Requires 1 or 2 arguments: <buffer> [<flags>]");
+  if (!obj->_active) NanThrowError("Engine has already been closed");
+  if (args.Length() < 1 || args.Length() > 2) NanThrowTypeError("Requires 1 or 2 arguments: <buffer> [<flags>]");
 
   v8::Handle<v8::Object> buffer = args[0]->ToObject();
-  if (!node::Buffer::HasInstance(buffer)) throwTypeError("Argument must be a buffer");
+  if (!node::Buffer::HasInstance(buffer)) NanThrowTypeError("Argument must be a buffer");
 
   int flags = (args.Length() > 1) ? args[1]->IntegerValue() : 0;
 
@@ -147,13 +137,13 @@ v8::Handle<v8::Value> Engine::Drain(const v8::Arguments& args) {
   obj->_stream.next_out = (uint8_t *) node::Buffer::Data(buffer);
   obj->_stream.avail_out = node::Buffer::Length(buffer);
   lzma_ret ret = lzma_code(&obj->_stream, action);
-  if (ret != LZMA_OK && ret != LZMA_STREAM_END) throwError(lzma_perror(ret));
+  if (ret != LZMA_OK && ret != LZMA_STREAM_END) NanThrowError(lzma_perror(ret));
 
   int used = node::Buffer::Length(buffer) - obj->_stream.avail_out;
   if (obj->_stream.avail_in > 0 || (action == LZMA_FINISH && ret != LZMA_STREAM_END)) {
     // try more.
-    return scope.Close(v8::Integer::New(-used));
+    NanReturnValue(NanNew<v8::Integer>(-used));
   } else {
-    return scope.Close(v8::Integer::New(used));
+    NanReturnValue(NanNew<v8::Integer>(used));
   }
 }

@@ -15,6 +15,7 @@
         "-fPIC"
       ],
       "include_dirs": [
+        "<!(node -e \"require('nan')\")",
         "<(SHARED_INTERMEDIATE_DIR)/xz-<@(xz_version)/src/liblzma/api"
       ],
       "libraries": [

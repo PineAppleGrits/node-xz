@@ -17,12 +17,14 @@ private:
   explicit Engine(void);
   ~Engine();
 
-  static v8::Handle<v8::Value> New(const v8::Arguments& args);
-  static v8::Handle<v8::Value> Close(const v8::Arguments& args);
-  static v8::Handle<v8::Value> Feed(const v8::Arguments& args);
-  static v8::Handle<v8::Value> Drain(const v8::Arguments& args);
+  static NAN_METHOD(New);
+  static NAN_METHOD(Close);
+  static NAN_METHOD(Feed);
+  static NAN_METHOD(Drain);
 
-  static v8::Persistent<v8::Function> constructor;
+  static v8::Persistent<v8::FunctionTemplate> constructor;
+
+  static v8::Local<v8::Object> NewInstance(v8::Local<v8::Value> args);
 
   lzma_stream _stream;
   bool _active;

@@ -24,6 +24,7 @@
     "prepublish": "./node_modules/plz/bin/plz -v build"
   },
   "dependencies": {
+    "nan": "*"
   },
   "devDependencies": {
     "coffee-script": "^1.7",
