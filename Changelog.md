@@ -1,3 +1,8 @@
+## 1.1.1  (8 feb 2015)
+
+- converted all the javascript code from coffee-script to ES6 (no visible external changes)
+
+
 ## 1.1.0  (8 feb 2015)
 
 - switched to using NaN for the v8 bindings, which should fix it to work with io.js
