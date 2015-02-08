@@ -1,9 +1,10 @@
 {
   "name": "xz",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "node bindings for the xz compression library",
   "keywords": [
-    "compression", "xz"
+    "compression",
+    "xz"
   ],
   "author": "Robey Pointer <robeypointer@gmail.com>",
   "homepage": "https://github.com/robey/node-xz",
