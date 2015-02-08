@@ -19,25 +19,23 @@
     }
   ],
   "scripts": {
-    "clean": "rm -rf node_modules build",
+    "clean": "rm -rf lib build",
     "build": "node-gyp configure build",
-    "test": "./node_modules/plz/bin/plz -v clean test",
-    "prepublish": "./node_modules/plz/bin/plz -v build"
+    "prepublish": "6to5 --source-maps --out-dir lib src && 6to5 --source-maps --out-dir test/lib test/src",
+    "test": "mocha -R spec --colors test/lib --timeout 30000"
   },
   "dependencies": {
     "nan": "*"
   },
   "devDependencies": {
-    "coffee-script": "^1.7",
+    "6to5": "*",
     "mocha": "*",
     "mocha-sprinkles": "*",
-    "plz": "^2.0.3",
     "should": "*"
   },
   "main": "./lib/xz.js",
   "files": [
     "binding.gyp",
-    "build.plz",
     "Changelog.md",
     "deps",
     "lib",
