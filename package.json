@@ -22,7 +22,7 @@
     "clean": "rm -rf lib build",
     "build": "node-gyp configure build",
     "prepublish": "6to5 --source-maps --out-dir lib src && 6to5 --source-maps --out-dir test/lib test/src",
-    "test": "mocha -R spec --colors test/lib --timeout 30000"
+    "test": "mocha -R spec --colors test/lib"
   },
   "dependencies": {
     "nan": "*"
