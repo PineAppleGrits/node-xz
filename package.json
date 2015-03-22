@@ -19,16 +19,17 @@
     }
   ],
   "scripts": {
-    "clean": "rm -rf lib build",
+    "clean": "rm -rf lib test/lib build",
+    "distclean": "npm run clean && rm -rf node_modules",
     "build": "node-gyp configure build",
-    "prepublish": "6to5 --source-maps --out-dir lib src && 6to5 --source-maps --out-dir test/lib test/src",
+    "prepublish": "babel --source-maps --out-dir lib src && babel --source-maps --out-dir test/lib test/src",
     "test": "mocha -R spec --colors test/lib"
   },
   "dependencies": {
     "nan": "*"
   },
   "devDependencies": {
-    "6to5": "*",
+    "babel": "*",
     "mocha": "*",
     "mocha-sprinkles": "*",
     "should": "*"
