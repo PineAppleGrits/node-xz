@@ -1,3 +1,8 @@
+## 1.2.0  (20 aug 2015)
+
+- upgraded to NaN 2.0 [pgbross]
+
+
 ## 1.1.1  (8 feb 2015)
 
 - converted all the javascript code from coffee-script to ES6 (no visible external changes)
