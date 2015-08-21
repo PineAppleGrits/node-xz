@@ -22,11 +22,11 @@ class XzStream extends stream.Transform {
   }
 
   _drain(estimate, flags) {
-    let bufSize = Math.min(estimate * 1.1, DEFAULT_BUFSIZE);
-    let segments = [];
-    let n = -1
+    const bufSize = Math.min(estimate * 1.1, DEFAULT_BUFSIZE);
+    const segments = [];
+    let n = -1;
     while (n < 0) {
-      let buffer = new Buffer(bufSize);
+      const buffer = new Buffer(bufSize);
       n = this.engine.drain(buffer, flags);
       segments.push(buffer.slice(0, Math.abs(n)));
     }
