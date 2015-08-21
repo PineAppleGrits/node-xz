@@ -19,14 +19,14 @@
     }
   ],
   "scripts": {
+    "build": "npm run prepublish",
     "clean": "rm -rf lib test/lib build",
     "distclean": "npm run clean && rm -rf node_modules",
-    "build": "node-gyp configure build",
-    "prepublish": "babel --source-maps --out-dir lib src && babel --source-maps --out-dir test/lib test/src",
+    "prepublish": "node-gyp configure build && babel --source-maps --out-dir lib src && babel --source-maps --out-dir test/lib test/src",
     "test": "mocha -R spec --colors test/lib"
   },
   "dependencies": {
-    "nan": "*"
+    "nan": "^2.0.0"
   },
   "devDependencies": {
     "babel": "*",

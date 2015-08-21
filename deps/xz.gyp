@@ -33,7 +33,7 @@
       ],
       'actions': [
         {
-          'action_name': 'fuck',
+          'action_name': 'configure_and_make',
           'inputs': [
             '<(SHARED_INTERMEDIATE_DIR)/xz-<@(xz_version)/configure'
           ],
