@@ -4,7 +4,7 @@
 
 #include "engine.h"
 
-void init(v8::Handle<v8::Object> exports) {
+void init(v8::Local<v8::Object> exports) {
   Engine::Init(exports);
 }
 

@@ -37,7 +37,7 @@ Engine::~Engine() {
   if (_active) lzma_end(&_stream);
 }
 
-void Engine::Init(v8::Handle<v8::Object> exports) {
+void Engine::Init(v8::Local<v8::Object> exports) {
   Nan::HandleScope scope;
 
   // constructor template
@@ -109,7 +109,7 @@ NAN_METHOD(Engine::Feed) {
 
   if (info.Length() != 1) Nan::ThrowTypeError("Requires 1 argument: <buffer>");
 
-  v8::Handle<v8::Object> buffer = info[0]->ToObject();
+  v8::Local<v8::Object> buffer = info[0]->ToObject();
   if (!node::Buffer::HasInstance(buffer)) Nan::ThrowTypeError("Argument must be a buffer");
   obj->_stream.next_in = (const uint8_t *) node::Buffer::Data(buffer);
   obj->_stream.avail_in = node::Buffer::Length(buffer);
@@ -127,7 +127,7 @@ NAN_METHOD(Engine::Drain) {
   if (!obj->_active) Nan::ThrowError("Engine has already been closed");
   if (info.Length() < 1 || info.Length() > 2) Nan::ThrowTypeError("Requires 1 or 2 arguments: <buffer> [<flags>]");
 
-  v8::Handle<v8::Object> buffer = info[0]->ToObject();
+  v8::Local<v8::Object> buffer = info[0]->ToObject();
   if (!node::Buffer::HasInstance(buffer)) Nan::ThrowTypeError("Argument must be a buffer");
 
   int flags = (info.Length() > 1) ? info[1]->IntegerValue() : 0;
