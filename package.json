@@ -12,12 +12,7 @@
     "type": "git",
     "url": "git://github.com/robey/node-xz.git"
   },
-  "licenses": [
-    {
-      "type": "Apache License 2.0",
-      "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-    }
-  ],
+  "license": "Apache-2.0",
   "scripts": {
     "build": "npm run prepublish",
     "clean": "rm -rf lib test/lib build",
