@@ -1,3 +1,8 @@
+## 1.2.1  (26 dec 2015)
+
+- upgraded to Babel 6.0
+
+
 ## 1.2.0  (20 aug 2015)
 
 - upgraded to NaN 2.0 [pgbross]
