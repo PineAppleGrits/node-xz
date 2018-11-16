@@ -14,24 +14,26 @@
   },
   "license": "Apache-2.0",
   "scripts": {
-    "build": "node-gyp configure build && babel --source-maps --out-dir lib src",
-    "build-test": "babel --source-maps --out-dir test/lib test/src",
-    "clean": "rm -rf lib test/lib build",
+    "build": "node-gyp configure build && tsc",
+    "clean": "rm -rf lib build",
     "distclean": "npm run clean && rm -rf node_modules",
-    "prepublish": "npm run build",
-    "test": "npm run build && npm run build-test && mocha -R spec --colors test/lib"
+    "prepare": "npm run build",
+    "test": "npm run build && mocha -R spec --colors lib/test"
   },
   "dependencies": {
-    "nan": "^2.2.0"
+    "nan": "^2.11.1"
   },
   "devDependencies": {
-    "babel-cli": "^6.0.0",
-    "babel-preset-es2015-node4": "^1.0.0",
-    "mocha": "*",
-    "mocha-sprinkles": "*",
-    "should": "*"
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^10.12.9",
+    "mocha": "^5.2.0",
+    "node-gyp": "^3.8.0",
+    "should": "^13.2.3",
+    "source-map-support": "^0.5.9",
+    "typescript": "^3.1.6"
   },
   "main": "./lib/xz.js",
+  "types": "./lib/xz.d.ts",
   "files": [
     "binding.gyp",
     "Changelog.md",

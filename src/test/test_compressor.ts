@@ -1,12 +1,12 @@
-let fs = require("fs");
-let should = require("should");
-let stream = require("stream");
-let util = require("util");
+import "should";
+import "source-map-support/register";
 
-let xz = require("../../lib/xz");
+import * as fs from "fs";
+import * as stream from "stream";
+import * as xz from "../xz";
 
-function bufferSource(b) {
-  if (typeof b == "string") b = new Buffer(b);
+function bufferSource(b: string | Buffer) {
+  if (typeof b == "string") b = Buffer.from(b);
   let s = new stream.Readable();
   s._read = (size) => {
     s.push(b);
@@ -15,22 +15,24 @@ function bufferSource(b) {
   return s;
 }
 
-function bufferSink() {
-  let s = new stream.Writable();
-  s.buffers = [];
-  s._write = (chunk, encoding, callback) => {
-    s.buffers.push(chunk);
-    callback(null);
+class BufferSink extends stream.Writable {
+  buffers: Buffer[] = [];
+
+  _write(chunk: Buffer, encoding: string, callback: stream.TransformCallback) {
+    this.buffers.push(chunk);
+    callback(undefined);
   };
-  s.getBuffer = () => Buffer.concat(s.buffers)
-  return s;
+
+  getBuffer(): Buffer {
+    return Buffer.concat(this.buffers);
+  }
 }
 
 
 describe("Compressor/Decompressor", () => {
   it("can compress", (done) => {
     let c = new xz.Compressor();
-    let out = bufferSink();
+    let out = new BufferSink();
     bufferSource("hello!").pipe(c).pipe(out);
     out.on("finish", () => {
       out.getBuffer().length.should.eql(56);
@@ -42,7 +44,7 @@ describe("Compressor/Decompressor", () => {
     let data = "Hello, I'm Dr. Thaddeus Venture.";
     let c = new xz.Compressor();
     let d = new xz.Decompressor();
-    let out = bufferSink();
+    let out = new BufferSink();
     bufferSource(data).pipe(c).pipe(d).pipe(out);
     out.on("finish", () => {
       out.getBuffer().toString().should.eql(data);
@@ -52,7 +54,7 @@ describe("Compressor/Decompressor", () => {
 
   it("can compress a big file", (done) => {
     let c = new xz.Compressor(9);
-    let out = bufferSink();
+    let out = new BufferSink();
     fs.createReadStream("./testdata/minecraft.png").pipe(c).pipe(out);
     out.on("finish", () => {
       out.getBuffer().length.should.lessThan(fs.statSync("./testdata/minecraft.png").size);
