@@ -1,5 +1,5 @@
 {
   'variables': {
-    'xz_version%': '5.0.5'
+    'xz_version%': '5.2.4'
   }
 }
