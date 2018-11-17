@@ -1,6 +1,6 @@
 # xz
 
-Xz is the node binding for the xz library, which implements (streaming) LZMA2 compression. It consists of a very thin binding around liblzma, and wrapper javascript classes to implementh the nodejs "stream" transform interface. Typescript definitions are included.
+Xz is the node binding for the xz library, which implements (streaming) LZMA2 compression. It consists of a very thin binding around liblzma, and wrapper javascript classes to implement the nodejs "stream" transform interface. Typescript definitions are included.
 
 LZMA2 is better than gzip & bzip2 in many cases. Read more about LZMA here: http://en.wikipedia.org/wiki/Lempel-Ziv-Markov_chain_algorithm
 
