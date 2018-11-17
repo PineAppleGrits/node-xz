@@ -1,31 +1,26 @@
 #pragma once
 
-#include <node.h>
-#include <v8.h>
-
+#include <napi.h>
 #include "lzma.h"
 
 /**
  * This low-level wrapper is unpleasant, and isn't meant to be used directly.
  * It just provides access to the raw stream engine in xz.
  */
-class Engine : public Nan::ObjectWrap {
+class Engine : public Napi::ObjectWrap<Engine> {
 public:
-  static void Init(v8::Local<v8::Object> exports);
+  static Napi::Object Init(Napi::Env env, Napi::Object exports);
 
-private:
-  explicit Engine(void);
+  explicit Engine(const Napi::CallbackInfo& info);
   ~Engine();
 
-  static NAN_METHOD(New);
-  static NAN_METHOD(Close);
-  static NAN_METHOD(Feed);
-  static NAN_METHOD(Drain);
+private:
+  Napi::Value Close(const Napi::CallbackInfo& info);
+  Napi::Value Feed(const Napi::CallbackInfo& info);
+  Napi::Value Drain(const Napi::CallbackInfo& info);
 
-  static Nan::Persistent<v8::FunctionTemplate> constructor;
+  static Napi::FunctionReference constructor;
 
-  static v8::Local<v8::Object> NewInstance(v8::Local<v8::Value> info);
-
-  lzma_stream _stream;
-  bool _active;
+  lzma_stream stream;
+  bool active;
 };

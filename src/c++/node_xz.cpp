@@ -1,11 +1,7 @@
-#include <nan.h>
-
-#include "lzma.h"
-
 #include "engine.h"
 
-void init(v8::Local<v8::Object> exports) {
-  Engine::Init(exports);
+Napi::Object init(Napi::Env env, Napi::Object exports) {
+  return Engine::Init(env, exports);
 }
 
-NODE_MODULE(node_xz, init);
+NODE_API_MODULE(node_xz, init)
