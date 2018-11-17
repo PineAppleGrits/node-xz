@@ -1,22 +1,19 @@
-xz
-==
+# xz
 
-Xz is the node binding for the xz library, which implements (streaming) LZMA2 compression.
+Xz is the node binding for the xz library, which implements (streaming) LZMA2 compression. It consists of a very thin binding around liblzma, and wrapper javascript classes to implementh the nodejs "stream" transform interface. Typescript definitions are included.
 
 LZMA2 is better than gzip & bzip2 in many cases. Read more about LZMA here: http://en.wikipedia.org/wiki/Lempel-Ziv-Markov_chain_algorithm
 
 
-Install
--------
+## install
 
 ```sh
 $ npm install
-$ npm run test
+$ npm test
 ```
 
 
-API
----
+## api
 
 The API consists of only two stream transform classes: `Compressor` and `Decompressor`.
 
@@ -39,13 +36,11 @@ inFile.pipe(compression).pipe(outFile);
 ```
 
 
-License
--------
+## license
 
 Apache 2 (open-source) license, included in 'LICENSE.txt'.
 
 
-Authors
--------
+## authors
 
 - @robey - Robey Pointer <robeypointer@gmail.com>

@@ -1,3 +1,8 @@
+## 1.3.0  (17 nov 2018)
+
+- upgraded for node 10, and replaced NaN with node-addon-api
+
+
 ## 1.2.2  (6 may 2016)
 
 - upgraded to NaN 2.2 [pgbross]
