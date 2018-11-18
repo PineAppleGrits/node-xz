@@ -91,14 +91,17 @@ Napi::Value Engine::Feed(const Napi::CallbackInfo& info) {
     return Napi::Value();
   }
 
-  if (info.Length() != 1 || !info[0].IsBuffer()) {
-    Napi::Error::New(info.Env(), "Requires 1 argument: <buffer>").ThrowAsJavaScriptException();
+  if (info.Length() < 3 || !info[0].IsBuffer() || !info[1].IsNumber() || !info[2].IsNumber()) {
+    Napi::Error::New(info.Env(), "Requires 3 arguments: <buffer> <offset> <length>").ThrowAsJavaScriptException();
     return Napi::Value();
   }
 
   Napi::Buffer<uint8_t> buffer = info[0].As<Napi::Buffer<uint8_t>>();
-  stream.next_in = (const uint8_t *) buffer.Data();
-  stream.avail_in = buffer.Length();
+  int offset = info[1].As<Napi::Number>().Int32Value();
+  int length = info[2].As<Napi::Number>().Int32Value();
+
+  stream.next_in = (const uint8_t *) buffer.Data() + offset;
+  stream.avail_in = length;
 
   return Napi::Number::New(info.Env(), stream.avail_in);
 }
@@ -112,24 +115,30 @@ Napi::Value Engine::Drain(const Napi::CallbackInfo& info) {
     return Napi::Value();
   }
 
-  if (info.Length() < 1 || info.Length() > 2 || !info[0].IsBuffer()) {
-    Napi::Error::New(info.Env(), "Requires 1 or 2 arguments: <buffer> [<flags>]").ThrowAsJavaScriptException();
+  if (info.Length() < 3 || !info[0].IsBuffer() || !info[1].IsNumber() || !info[2].IsNumber()) {
+    Napi::Error::New(
+      info.Env(),
+      "Requires 3 to 4 arguments: <buffer> <offset> <length> [<flags>]"
+    ).ThrowAsJavaScriptException();
     return Napi::Value();
   }
 
   Napi::Buffer<uint8_t> buffer = info[0].As<Napi::Buffer<uint8_t>>();
-  int flags = (info.Length() > 1 && !info[1].IsUndefined()) ? info[1].As<Napi::Number>().Int32Value() : 0;
+  int offset = info[1].As<Napi::Number>().Int32Value();
+  int length = info[2].As<Napi::Number>().Int32Value();
+  int flags = (info.Length() > 3 && !info[3].IsUndefined()) ? info[3].As<Napi::Number>().Int32Value() : 0;
 
   lzma_action action = (flags & ENCODE_FINISH) ? LZMA_FINISH : LZMA_RUN;
-  stream.next_out = (uint8_t *) buffer.Data();
-  stream.avail_out = buffer.Length();
+  stream.next_out = (uint8_t *) buffer.Data() + offset;
+  stream.avail_out = length;
+
   lzma_ret ret = lzma_code(&stream, action);
   if (ret != LZMA_OK && ret != LZMA_STREAM_END) {
     Napi::Error::New(info.Env(), lzma_perror(ret)).ThrowAsJavaScriptException();
     return Napi::Value();
   }
 
-  int used = buffer.Length() - stream.avail_out;
+  int used = length - stream.avail_out;
   if (stream.avail_in > 0 || (action == LZMA_FINISH && ret != LZMA_STREAM_END)) {
     // try more.
     return Napi::Number::New(info.Env(), -used);

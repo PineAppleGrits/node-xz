@@ -17,8 +17,8 @@ $ npm test
 
 The API consists of only two stream transform classes: `Compressor` and `Decompressor`.
 
-- `new xz.Compressor([preset], [options])`
-- `new xz.Decompressor([options])`
+- `new xz.Compressor(preset?: number, options?: TransformOptions)`
+- `new xz.Decompressor(options?: TransformOptions)`
 
 The options object is passed to node's `Transform`. Compression takes a "preset" number, which is an abstraction of the compression difficulty level, from 1 to 9, where 1 puts in the least effort. The default is 6.
 
@@ -34,6 +34,23 @@ var outFile = fs.createWriteStream("./testdata/minecraft.png.lzma2");
 
 inFile.pipe(compression).pipe(outFile);
 ```
+
+
+## performance api
+
+Under the hood, liblzma requires two buffers for each iteration: an input and an output. The low-level API provides an `Engine` object that lets you manipulate those buffers yourself at the expense of ergonomics.
+
+- `xz.compressRaw(preset?: number): Engine`
+- `xz.decompressRaw(): Engine`
+
+To compress or decompress data, "feed" a buffer segment into the engine, then "drain" the result. Each method takes a nodejs `Buffer`, an offset into that buffer, and the count of bytes to use.
+
+- `engine.feed(buffer: Buffer, offset: number, length: number): number`
+- `engine.drain(buffer: Buffer, offset: number, length: number, flags?: number): number`
+
+`feed` returns the number of bytes written, which will always be the same as `length`. `drain` returns the number of bytes that liblzma used in the buffer you provided. If the number is negative, liblzma is not done draining (you didn't provide enough buffer space) and you need to call `drain` again with until it returns a positive number. For example, if `drain` returns -23, it used 23 bytes of the provided buffer, but has more data to provide.
+
+`drain` uses the input buffer provided by `feed`, so it's important to *keep the input buffer in scope until `drain` is complete*.
 
 
 ## license

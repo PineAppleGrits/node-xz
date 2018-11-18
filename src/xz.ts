@@ -4,11 +4,12 @@ const node_xz = require("../build/Release/node_xz.node");
 
 const DEFAULT_BUFSIZE = 128 * 1024;
 
-interface Engine {
+export interface Engine {
   close(): void;
-  feed(buffer: Buffer): number;
-  drain(buffer: Buffer, flags?: number): number;
+  feed(buffer: Buffer, offset: number, length: number): number;
+  drain(buffer: Buffer, offset: number, length: number, flags?: number): number;
 }
+export const ENCODE_FINISH = node_xz.ENCODE_FINISH;
 
 class XzStream extends stream.Transform {
   engine: Engine;
@@ -19,7 +20,7 @@ class XzStream extends stream.Transform {
   }
 
   _transform(chunk: Buffer, encoding: string, callback: stream.TransformCallback) {
-    this.engine.feed(chunk);
+    this.engine.feed(chunk, 0, chunk.length);
     this._drain(chunk.length);
     callback(undefined);
   }
@@ -35,7 +36,7 @@ class XzStream extends stream.Transform {
     let n = -1;
     while (n < 0) {
       const buffer = Buffer.alloc(bufSize);
-      n = this.engine.drain(buffer, flags);
+      n = this.engine.drain(buffer, 0, buffer.length, flags);
       segments.push(buffer.slice(0, Math.abs(n)));
     }
     this.push(Buffer.concat(segments));
@@ -52,4 +53,12 @@ export class Decompressor extends XzStream {
   constructor(options?: stream.TransformOptions) {
     super(node_xz.MODE_DECODE, undefined, options);
   }
+}
+
+export function compressRaw(preset?: number): Engine {
+  return new node_xz.Engine(node_xz.MODE_ENCODE, preset);
+}
+
+export function decompressRaw(): Engine {
+  return new node_xz.Engine(node_xz.MODE_DECODE);
 }
