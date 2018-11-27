@@ -5,60 +5,54 @@ import "source-map-support/register";
 
 describe("Engine", () => {
   it("can be closed exactly once", () => {
-    let engine = compressRaw(6);
+    const engine = compressRaw(6);
     engine.close();
     (() => engine.close()).should.throw(/closed/);
   });
 
   it("encodes in steps", () => {
-    let writer = compressRaw(6);
-    writer.feed(Buffer.from("hello, hello!"), 0, 13);
-    let b1 = Buffer.alloc(128);
-    let n1 = writer.drain(b1, 0, b1.length);
+    const writer = compressRaw(6);
+    const b1 = Buffer.alloc(128);
+    const n1 = writer.process(Buffer.from("hello, hello!"), b1);
     n1.should.eql(24);
-    let b2 = Buffer.alloc(128);
-    let n2 = writer.drain(b2, 0, b2.length, ENCODE_FINISH);
+
+    const b2 = Buffer.alloc(128);
+    const n2 = writer.process(undefined, b2, ENCODE_FINISH);
     n2.should.eql(40);
   });
 
   it("encodes all at once", () => {
-    let writer = compressRaw(6);
-    writer.feed(Buffer.from("hello, hello!"), 0, 13);
-    let b1 = Buffer.alloc(128);
-    let n1 = writer.drain(b1, 0, b1.length, ENCODE_FINISH);
+    const writer = compressRaw(6);
+    const b1 = Buffer.alloc(128);
+    const n1 = writer.process(Buffer.from("hello, hello!"), b1, ENCODE_FINISH);
     n1.should.eql(64);
   });
 
   it("copes with insufficient space", () => {
-    let writer = compressRaw(6);
-    writer.feed(Buffer.from("hello, hello!"), 0, 13);
-    let b1 = Buffer.alloc(32);
-    let n1 = writer.drain(b1, 0, b1.length, ENCODE_FINISH);
+    const writer = compressRaw(6);
+    const b1 = Buffer.alloc(32);
+    const n1 = writer.process(Buffer.from("hello, hello!"), b1, ENCODE_FINISH);
     n1.should.eql(-32);
-    let b2 = Buffer.alloc(32);
-    let n2 = writer.drain(b2, 0, b2.length, ENCODE_FINISH);
+    const b2 = Buffer.alloc(32);
+    const n2 = writer.process(undefined, b2, ENCODE_FINISH);
     n2.should.eql(32);
 
-    let fullWriter = compressRaw(6);
-    fullWriter.feed(Buffer.from("hello, hello!"), 0, 13);
-    let bf = Buffer.alloc(64);
-    let nf = fullWriter.drain(bf, 0, bf.length, ENCODE_FINISH);
+    const fullWriter = compressRaw(6);
+    const bf = Buffer.alloc(64);
+    const nf = fullWriter.process(Buffer.from("hello, hello!"), bf, ENCODE_FINISH);
     nf.should.eql(64);
     Buffer.concat([ b1, b2 ]).should.eql(bf);
   });
 
   it("can decode what it encodes", () => {
-    let writer = compressRaw(6);
-    writer.feed(Buffer.from("hello, hello!"), 0, 13);
-    let b1 = Buffer.alloc(128);
-    let n1 = writer.drain(b1, 0, b1.length, ENCODE_FINISH);
+    const writer = compressRaw(6);
+    const b1 = Buffer.alloc(128);
+    const n1 = writer.process(Buffer.from("hello, hello!"), b1, ENCODE_FINISH);
     writer.close();
 
-    let reader = decompressRaw();
-    reader.feed(b1.slice(0, n1), 0, n1);
-
+    const reader = decompressRaw();
     let b2 = Buffer.alloc(128);
-    let n2 = reader.drain(b2, 0, b2.length);
+    const n2 = reader.process(b1.slice(0, n1), b2);
     b2.slice(0, n2).toString().should.eql("hello, hello!");
   });
 
@@ -67,15 +61,13 @@ describe("Engine", () => {
     Buffer.from("hello").copy(buffer);
 
     const writer = compressRaw(6);
-    writer.feed(buffer, 0, 5);
-    writer.drain(buffer, 8, 56, ENCODE_FINISH).should.eql(56);
+    writer.process(buffer.slice(0, 5), buffer.slice(8, 64), ENCODE_FINISH).should.eql(56);
 
     buffer[0] = 0;
     buffer[2] = 9;
-    const reader = decompressRaw();
-    reader.feed(buffer, 8, 56);
-    reader.drain(buffer, 0, 8, ENCODE_FINISH).should.eql(5);
 
+    const reader = decompressRaw();
+    reader.process(buffer.slice(8, 64), buffer.slice(0, 8)).should.eql(5);
     buffer.slice(0, 5).toString().should.eql("hello");
   });
 });

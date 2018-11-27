@@ -28,8 +28,7 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports) {
 
   Napi::Function func = DefineClass(env, "Engine", {
     InstanceMethod("close", &Engine::Close),
-    InstanceMethod("feed", &Engine::Feed),
-    InstanceMethod("drain", &Engine::Drain)
+    InstanceMethod("process", &Engine::Process),
   });
 
   constructor = Napi::Persistent(func);
@@ -83,54 +82,39 @@ Napi::Value Engine::Close(const Napi::CallbackInfo& info) {
   return info.Env().Undefined();
 }
 
-// prep next "Drain" by setting up the input buffer.
-// you may not let the buffer leave scope before draining!
-Napi::Value Engine::Feed(const Napi::CallbackInfo& info) {
+Napi::Value Engine::Process(const Napi::CallbackInfo& info) {
   if (!active) {
     Napi::Error::New(info.Env(), "Engine has already been closed").ThrowAsJavaScriptException();
+    buffer_ref.Reset();
     return Napi::Value();
   }
 
-  if (info.Length() < 3 || !info[0].IsBuffer() || !info[1].IsNumber() || !info[2].IsNumber()) {
-    Napi::Error::New(info.Env(), "Requires 3 arguments: <buffer> <offset> <length>").ThrowAsJavaScriptException();
-    return Napi::Value();
-  }
-
-  Napi::Buffer<uint8_t> buffer = info[0].As<Napi::Buffer<uint8_t>>();
-  int offset = info[1].As<Napi::Number>().Int32Value();
-  int length = info[2].As<Napi::Number>().Int32Value();
-
-  stream.next_in = (const uint8_t *) buffer.Data() + offset;
-  stream.avail_in = length;
-
-  return Napi::Number::New(info.Env(), stream.avail_in);
-}
-
-// run the encoder, filling as much of the buffer as possible, returning the amount used.
-// negative value means you need to run it again.
-// if "finished" is true, tell the encoder there will be no more data, and to wrap it up.
-Napi::Value Engine::Drain(const Napi::CallbackInfo& info) {
-  if (!active) {
-    Napi::Error::New(info.Env(), "Engine has already been closed").ThrowAsJavaScriptException();
-    return Napi::Value();
-  }
-
-  if (info.Length() < 3 || !info[0].IsBuffer() || !info[1].IsNumber() || !info[2].IsNumber()) {
+  if (info.Length() < 2 || !info[1].IsBuffer() || !(info[0].IsBuffer() || info[0].IsUndefined())) {
     Napi::Error::New(
       info.Env(),
-      "Requires 3 to 4 arguments: <buffer> <offset> <length> [<flags>]"
+      "Requires 2 or 3 arguments: <buffer|undefined> <buffer> [flags]"
     ).ThrowAsJavaScriptException();
+    buffer_ref.Reset();
     return Napi::Value();
   }
 
-  Napi::Buffer<uint8_t> buffer = info[0].As<Napi::Buffer<uint8_t>>();
-  int offset = info[1].As<Napi::Number>().Int32Value();
-  int length = info[2].As<Napi::Number>().Int32Value();
-  int flags = (info.Length() > 3 && !info[3].IsUndefined()) ? info[3].As<Napi::Number>().Int32Value() : 0;
+  if (info[0].IsBuffer()) {
+    Napi::Buffer<uint8_t> buffer = info[0].As<Napi::Buffer<uint8_t>>();
+    stream.next_in = (const uint8_t *) buffer.Data();
+    stream.avail_in = buffer.Length();
+    // keep a copy:
+    buffer_ref.Reset(buffer, 1);
+  } else if (buffer_ref.IsEmpty()) {
+    stream.next_in = nullptr;
+    stream.avail_in = 0;
+  }
+
+  Napi::Buffer<uint8_t> buffer = info[1].As<Napi::Buffer<uint8_t>>();
+  int flags = (info.Length() > 2 && info[2].IsNumber()) ? info[2].As<Napi::Number>().Int32Value() : 0;
 
   lzma_action action = (flags & ENCODE_FINISH) ? LZMA_FINISH : LZMA_RUN;
-  stream.next_out = (uint8_t *) buffer.Data() + offset;
-  stream.avail_out = length;
+  stream.next_out = (uint8_t *) buffer.Data();
+  stream.avail_out = buffer.Length();
 
   lzma_ret ret = lzma_code(&stream, action);
   if (ret != LZMA_OK && ret != LZMA_STREAM_END) {
@@ -138,11 +122,12 @@ Napi::Value Engine::Drain(const Napi::CallbackInfo& info) {
     return Napi::Value();
   }
 
-  int used = length - stream.avail_out;
+  int used = buffer.Length() - stream.avail_out;
   if (stream.avail_in > 0 || (action == LZMA_FINISH && ret != LZMA_STREAM_END)) {
-    // try more.
+    // need more space!
     return Napi::Number::New(info.Env(), -used);
   } else {
+    buffer_ref.Reset();
     return Napi::Number::New(info.Env(), used);
   }
 }
