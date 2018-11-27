@@ -2,44 +2,59 @@ import * as stream from "stream";
 
 const node_xz = require("../build/Release/node_xz.node");
 
-const DEFAULT_BUFSIZE = 128 * 1024;
+const MIN_BUFSIZE = 1024;
+const MAX_BUFSIZE = 64 * 1024;
 
 export interface Engine {
   close(): void;
-  feed(buffer: Buffer, offset: number, length: number): number;
-  drain(buffer: Buffer, offset: number, length: number, flags?: number): number;
+  process(input: Buffer | undefined, output: Buffer, flags?: number): number;
 }
+
 export const ENCODE_FINISH = node_xz.ENCODE_FINISH;
 
 class XzStream extends stream.Transform {
   engine: Engine;
+
+  // keep one buffer around in case we can reuse it between calls.
+  buffer = Buffer.alloc(MIN_BUFSIZE);
 
   constructor(mode?: number, preset?: number, options?: stream.TransformOptions) {
     super(options);
     this.engine = new node_xz.Engine(mode, preset);
   }
 
-  _transform(chunk: Buffer, encoding: string, callback: stream.TransformCallback) {
-    this.engine.feed(chunk, 0, chunk.length);
-    this._drain(chunk.length);
+  _transform(chunk: Buffer | string, encoding: string | undefined, callback: stream.TransformCallback) {
+    const rv = this.process(chunk instanceof Buffer ? chunk : Buffer.from(chunk, encoding));
+    this.push(rv);
     callback(undefined);
   }
 
   _flush(callback: stream.TransformCallback) {
-    this._drain(DEFAULT_BUFSIZE, node_xz.ENCODE_FINISH);
+    const rv = this.process(undefined, node_xz.ENCODE_FINISH);
+    this.push(rv);
     callback(undefined);
   }
 
-  private _drain(estimate: number, flags?: number) {
-    const bufSize = Math.min(estimate * 1.1, DEFAULT_BUFSIZE);
-    const segments = [];
-    let n = -1;
+  process(input: Buffer | undefined, flags?: number): Buffer {
+    // slightly too clever: we use the same buffer each time, as long as it's
+    // big enough: the `concat` at the end will create a new one. if we need
+    // to go back for a 2nd+ time, we replace it, since the array of `slice`
+    // are just views.
+    const bufSize = Math.max(Math.min(input ? input.length * 1.1 : this.buffer.length, MAX_BUFSIZE), MIN_BUFSIZE);
+    if (bufSize > this.buffer.length) this.buffer = Buffer.alloc(bufSize);
+
+    let n = this.engine.process(input, this.buffer, flags);
+    let size = Math.abs(n);
+    const segments = [ this.buffer.slice(0, size) ];
+
     while (n < 0) {
-      const buffer = Buffer.alloc(bufSize);
-      n = this.engine.drain(buffer, 0, buffer.length, flags);
-      segments.push(buffer.slice(0, Math.abs(n)));
+      this.buffer = Buffer.alloc(this.buffer.length);
+      n = this.engine.process(undefined, this.buffer, flags);
+      size += Math.abs(n);
+      segments.push(this.buffer.slice(0, Math.abs(n)));
     }
-    this.push(Buffer.concat(segments));
+
+    return Buffer.concat(segments, size);
   }
 }
 
