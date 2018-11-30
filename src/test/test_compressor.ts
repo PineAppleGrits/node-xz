@@ -53,7 +53,7 @@ describe("Compressor/Decompressor", () => {
   });
 
   it("can compress a big file", (done) => {
-    let c = new xz.Compressor(9);
+    let c = new xz.Compressor({ preset: 9 });
     let out = new BufferSink();
     fs.createReadStream("./testdata/minecraft.png").pipe(c).pipe(out);
     out.on("finish", () => {

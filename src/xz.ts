@@ -12,15 +12,21 @@ export interface Engine {
 
 export const ENCODE_FINISH = node_xz.ENCODE_FINISH;
 
+export interface XzTransformOptions extends stream.TransformOptions {
+  preset?: number;
+  bufferSize?: number;
+}
+
 class XzStream extends stream.Transform {
   engine: Engine;
 
   // keep one buffer around in case we can reuse it between calls.
-  buffer = Buffer.alloc(MIN_BUFSIZE);
+  buffer: Buffer;
 
-  constructor(mode?: number, preset?: number, options?: stream.TransformOptions) {
+  constructor(mode?: number, options?: XzTransformOptions) {
     super(options);
-    this.engine = new node_xz.Engine(mode, preset);
+    this.engine = new node_xz.Engine(mode, options ? options.preset : undefined);
+    this.buffer = Buffer.alloc(options && options.bufferSize ? options.bufferSize : MIN_BUFSIZE);
   }
 
   _transform(chunk: Buffer | string, encoding: string | undefined, callback: stream.TransformCallback) {
@@ -59,14 +65,14 @@ class XzStream extends stream.Transform {
 }
 
 export class Compressor extends XzStream {
-  constructor(preset?: number, options?: stream.TransformOptions) {
-    super(node_xz.MODE_ENCODE, preset, options);
+  constructor(options?: XzTransformOptions) {
+    super(node_xz.MODE_ENCODE, options);
   }
 }
 
 export class Decompressor extends XzStream {
-  constructor(options?: stream.TransformOptions) {
-    super(node_xz.MODE_DECODE, undefined, options);
+  constructor(options?: XzTransformOptions) {
+    super(node_xz.MODE_DECODE, options);
   }
 }
 
