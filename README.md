@@ -17,10 +17,13 @@ $ npm test
 
 The API consists of only two stream transform classes: `Compressor` and `Decompressor`.
 
-- `new xz.Compressor(preset?: number, options?: TransformOptions)`
-- `new xz.Decompressor(options?: TransformOptions)`
+- `new xz.Compressor(options?: XzTransformOptions)`
+- `new xz.Decompressor(options?: XzTransformOptions)`
 
-The options object is passed to node's `Transform`. Compression takes a "preset" number, which is an abstraction of the compression difficulty level, from 1 to 9, where 1 puts in the least effort. The default is 6.
+The options object is passed to node's `Transform`, and has two additional optional fields:
+
+- `preset: number`: an abstraction of the compression difficulty level, from 1 to 9, where 1 puts in the least effort. The default is 6.
+- `bufferSize: number`: minimum buffer size to use for encoding/decoding blocks of data. The default is 1KB, but it will grow to match the block size of its input as it processes data. (You shouldn't normally need to care about this.)
 
 Both objects are stream transforms that consume and produce Buffers. Here's example code to compress the sample file included with this distribution:
 
@@ -36,21 +39,15 @@ inFile.pipe(compression).pipe(outFile);
 ```
 
 
-## performance api
+## non-streaming api
 
-Under the hood, liblzma requires two buffers for each iteration: an input and an output. The low-level API provides an `Engine` object that lets you manipulate those buffers yourself at the expense of ergonomics.
+If you aren't using nodejs streams, the `process` method will process one buffer at a time:
 
-- `xz.compressRaw(preset?: number): Engine`
-- `xz.decompressRaw(): Engine`
+- `process(input: Buffer | undefined, flags?: number): Buffer`
 
-To compress or decompress data, "feed" a buffer segment into the engine, then "drain" the result. Each method takes a nodejs `Buffer`, an offset into that buffer, and the count of bytes to use.
+It feeds a `Buffer` into the lzma2 engine and returns any processed data. The returned `Buffer` may have a length of 0.
 
-- `engine.feed(buffer: Buffer, offset: number, length: number): number`
-- `engine.drain(buffer: Buffer, offset: number, length: number, flags?: number): number`
-
-`feed` returns the number of bytes written, which will always be the same as `length`. `drain` returns the number of bytes that liblzma used in the buffer you provided. If the number is negative, liblzma is not done draining (you didn't provide enough buffer space) and you need to call `drain` again with until it returns a positive number. For example, if `drain` returns -23, it used 23 bytes of the provided buffer, but has more data to provide.
-
-`drain` uses the input buffer provided by `feed`, so it's important to *keep the input buffer in scope until `drain` is complete*.
+The only possible flag is `ENCODE_FINISH`, which tells the lzma2 engine that the stream is complete. On `ENCODE_FINISH`, the returned `Buffer` is the final one, and an input `Buffer` is optional. (lzma2 keeps a large internal buffer while compressing, so it's common to receive empty `Buffer`s while you compress, followed by a large final `Buffer` when you end the stream with `ENCODE_FINISH`.)
 
 
 ## license
