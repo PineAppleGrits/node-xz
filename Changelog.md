@@ -1,3 +1,9 @@
+## 1.4.0  (30 nov 2018)
+
+- exposed a new method `process()` for people who don't want to use nodejs streams
+- changed the internal API
+
+
 ## 1.3.0  (17 nov 2018)
 
 - upgraded for node 10, and replaced NaN with node-addon-api
