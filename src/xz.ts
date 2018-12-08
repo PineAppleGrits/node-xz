@@ -37,13 +37,43 @@ class XzStream extends stream.Transform {
 
   _transform(chunk: Buffer | string, encoding: string | undefined, callback: stream.TransformCallback) {
     const input = chunk instanceof Buffer ? chunk : Buffer.from(chunk, encoding);
+    this.update(input, callback);
+  }
+
+  _flush(callback: stream.TransformCallback) {
+    this.final(callback);
+  }
+
+  // mimic the crypto API for people who don't care for nodejs streams
+  update(input: Buffer, callback: (error?: Error, output?: Buffer) => void) {
     const bufSize = Math.max(Math.min(input.length * 1.1, MAX_BUFSIZE), MIN_BUFSIZE);
     if (bufSize > this.buffer.length) this.buffer = Buffer.alloc(bufSize);
     this.processLoop(input, 0, [], callback);
   }
 
-  _flush(callback: stream.TransformCallback) {
-    this.processLoop(undefined, node_xz.ENCODE_FINISH, [], callback);
+  // mimic the crypto API for people who don't care for nodejs streams
+  updatePromise(input: Buffer): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      this.update(input, (error, output) => {
+        if (error || !output) return reject(error);
+        resolve(output);
+      });
+    });
+  }
+
+  // mimic the crypto API for people who don't care for nodejs streams
+  final(callback: (error?: Error, output?: Buffer) => void) {
+    this.processLoop(undefined, ENCODE_FINISH, [], callback);
+  }
+
+  // mimic the crypto API for people who don't care for nodejs streams
+  finalPromise(): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      this.final((error, output) => {
+        if (error || !output) return reject(error);
+        resolve(output);
+      });
+    });
   }
 
   processLoop(input: Buffer | undefined, flags: number, segments: Buffer[], callback: stream.TransformCallback) {
