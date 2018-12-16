@@ -5,7 +5,7 @@ Xz is the node binding for the xz library, which implements (streaming) LZMA2 co
 LZMA2 is better than gzip & bzip2 in many cases. Read more about LZMA here: http://en.wikipedia.org/wiki/Lempel-Ziv-Markov_chain_algorithm
 
 
-## install
+## Install
 
 ```sh
 $ npm install
@@ -13,7 +13,7 @@ $ npm test
 ```
 
 
-## api
+## API
 
 The API consists of only two stream transform classes: `Compressor` and `Decompressor`.
 
@@ -39,22 +39,26 @@ inFile.pipe(compression).pipe(outFile);
 ```
 
 
-## non-streaming api
+## Non-streaming API
 
-If you aren't using nodejs streams, the `process` method will process one buffer at a time:
+If you aren't using nodejs streams, an API similar to the crypto API is available on both `Compressor` and `Decompressor`:
 
-- `process(input: Buffer | undefined, flags?: number): Buffer`
+- `update(input: Buffer, callback: (error?: Error, output?: Buffer) => void)`
+- `final(callback: (error?: Error, output?: Buffer) => void)`
 
-It feeds a `Buffer` into the lzma2 engine and returns any processed data. The returned `Buffer` may have a length of 0.
+A promise-based API is also available:
 
-The only possible flag is `ENCODE_FINISH`, which tells the lzma2 engine that the stream is complete. On `ENCODE_FINISH`, the returned `Buffer` is the final one, and an input `Buffer` is optional. (lzma2 keeps a large internal buffer while compressing, so it's common to receive empty `Buffer`s while you compress, followed by a large final `Buffer` when you end the stream with `ENCODE_FINISH`.)
+- `updatePromise(input: Buffer): Promise<Buffer>`
+- `finalPromise(): Promise<Buffer>`
+
+Each mothed feeds a `Buffer` into the lzma2 engine, which may be executed on a separate core (asynchronously). The returned `Buffer` may have a length of 0: lzma2 keeps a large internal buffer while compressing, so it's common to receive empty `Buffer`s while you compress, followed by a large final `Buffer` when you end the stream with `final`.
 
 
-## license
+## License
 
 Apache 2 (open-source) license, included in 'LICENSE.txt'.
 
 
-## authors
+## Authors
 
 - @robey - Robey Pointer <robeypointer@gmail.com>
