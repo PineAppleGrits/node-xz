@@ -1,3 +1,9 @@
+## 2.0.0  (16 dec 2018)
+
+- make c++ layer use `AsyncWorker` so it can use a background core
+- changed lower-level API to be callback or promise based (depending on your preference)
+
+
 ## 1.4.0  (30 nov 2018)
 
 - exposed a new method `process()` for people who don't want to use nodejs streams
