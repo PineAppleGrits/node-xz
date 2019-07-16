@@ -1,3 +1,8 @@
+## 2.0.1  (16 jul 2019)
+
+- upgrade node-gyp because it had some security updates
+
+
 ## 2.0.0  (16 dec 2018)
 
 - make c++ layer use `AsyncWorker` so it can use a background core
