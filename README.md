@@ -53,7 +53,7 @@ A promise-based API is also available:
 - `updatePromise(input: Buffer): Promise<Buffer>`
 - `finalPromise(): Promise<Buffer>`
 
-Each mothed feeds a `Buffer` into the lzma2 engine, which may be executed on a separate core (asynchronously). The returned `Buffer` may have a length of 0: lzma2 keeps a large internal buffer while compressing, so it's common to receive empty `Buffer`s while you compress, followed by a large final `Buffer` when you end the stream with `final`.
+Each method feeds a `Buffer` into the lzma2 engine, which may be executed on a separate core (asynchronously). The returned `Buffer` may have a length of 0: lzma2 keeps a large internal buffer while compressing, so it's common to receive empty `Buffer`s while you compress, followed by a large final `Buffer` when you end the stream with `final`.
 
 
 ## License

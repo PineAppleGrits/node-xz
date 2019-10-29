@@ -40,7 +40,7 @@
           'outputs': [
             '<(SHARED_INTERMEDIATE_DIR)/xz-<@(xz_version)/src/liblzma/.libs/liblzma.a'
           ],
-          'action': [ 'sh', '-c', 'cd <(SHARED_INTERMEDIATE_DIR)/xz-<@(xz_version) && env CFLAGS="-fPIC" ./configure && make' ]
+          'action': [ 'eval', 'cd <(SHARED_INTERMEDIATE_DIR)/xz-<@(xz_version) && env CFLAGS="-fPIC" ./configure && make' ]
         }
       ],
       'export_dependent_settings': [
