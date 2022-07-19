@@ -20,7 +20,7 @@
           'outputs': [
             '<(SHARED_INTERMEDIATE_DIR)/xz-<@(xz_version)/configure'
           ],
-          'action': [ 'python', './extract.py', './xz-<@(xz_version).tar.gz', '<(SHARED_INTERMEDIATE_DIR)' ]
+          'action': [ 'python3', './extract.py', './xz-<@(xz_version).tar.gz', '<(SHARED_INTERMEDIATE_DIR)' ]
         }
       ],
     },
